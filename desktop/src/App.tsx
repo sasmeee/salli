@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SpendCharts } from "@/components/SpendCharts";
 import "./App.css";
 
 type Pairing = { ip: string; port: number; code: string; expires_at: number };
@@ -114,11 +115,11 @@ function PairCard({
           <p className="font-mono text-4xl font-bold tracking-widest">
             {pretty}
           </p>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             {pair?.ip}:{pair?.port}
           </p>
         </div>
-        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${(left / 30) * 100}%` }}
@@ -172,10 +173,10 @@ export default function App() {
 
   if (!view.paired) {
     return (
-      <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center gap-6 p-8">
+      <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-8 text-foreground">
         <div className="text-center">
           <h1 className="text-5xl font-bold">🦥 Salli</h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="mt-2 text-muted-foreground">
             Your money, read by AI on your own laptop.
           </p>
         </div>
@@ -197,7 +198,7 @@ export default function App() {
     invoke("fix_tx", { id: t.id, merchant: t.merchant, category });
 
   return (
-    <main className="min-h-screen bg-background text-foreground p-8">
+    <main className="min-h-screen bg-background p-8 text-foreground">
       <header className="mb-8 flex items-start justify-between">
         <div>
           <h1 className="text-4xl font-bold">🦥 Salli</h1>
@@ -278,7 +279,7 @@ export default function App() {
           <CardHeader className="pb-2">
             <CardDescription>How they were read</CardDescription>
           </CardHeader>
-          <CardContent className="text-sm space-y-1">
+          <CardContent className="space-y-1 text-sm">
             <p>⚡ {bySource("rule")} instant by rules</p>
             <p>⚡ {bySource("memory")} instant from memory</p>
             <p>🧠 {bySource("ai")} by Gemma</p>
@@ -290,6 +291,8 @@ export default function App() {
         </Card>
       </div>
 
+      <SpendCharts txs={txs} />
+
       <Card>
         <CardHeader>
           <CardTitle>Transactions</CardTitle>
@@ -299,7 +302,7 @@ export default function App() {
         </CardHeader>
         <CardContent className="divide-y">
           {txs.length === 0 && (
-            <p className="text-muted-foreground py-4">
+            <p className="py-4 text-muted-foreground">
               Nothing yet. Tap Send on your phone. 🦥
             </p>
           )}
@@ -309,17 +312,17 @@ export default function App() {
               className="flex items-center justify-between gap-4 py-3"
               title={t.body}
             >
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex min-w-0 items-center gap-3">
                 <span className="text-2xl">{EMOJI[t.category] ?? "🦥"}</span>
                 <div className="min-w-0">
-                  <p className="font-semibold truncate">{t.merchant}</p>
+                  <p className="truncate font-semibold">{t.merchant}</p>
                   <p className="text-xs text-muted-foreground">
                     {t.sender} · {new Date(t.date).toLocaleDateString()} ·{" "}
                     {SOURCE[t.source] ?? ""}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex shrink-0 items-center gap-3">
                 <select
                   className="rounded-md border bg-background px-2 py-1 text-sm"
                   value={t.category}
