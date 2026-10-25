@@ -105,16 +105,26 @@ export type Insights = {
   cats: CatRow[];
   shops: ShopRow[];
   roast: string | null;
+  transfers: number;
 };
+
+// moving money between accounts or to people isn't spending
+export const isSpend = (t: Tx) => t.kind === "debit" && t.category !== "Transfer";
+const isIncome = (t: Tx) => t.kind === "credit" && t.category !== "Transfer";
+
+// banks hide some payees as ***** or xxxx
+export const tidy = (txs: Tx[]): Tx[] =>
+  txs.map((t) => (/^[\s*xX#.\-]+$/.test(t.merchant) ? { ...t, merchant: "Hidden payee" } : t));
 
 const sum = (xs: Tx[]) => xs.reduce((s, t) => s + t.amount, 0);
 
 export function insights(all: Tx[], month: string): Insights {
   const txs = all.filter((t) => monthKey(t.date) === month).sort((a, b) => b.date - a.date);
-  const debits = txs.filter((t) => t.kind === "debit");
+  const debits = txs.filter(isSpend);
   const spent = sum(debits);
-  const income = sum(txs.filter((t) => t.kind === "credit"));
-  const prev = sum(all.filter((t) => t.kind === "debit" && monthKey(t.date) === shiftMonth(month, -1)));
+  const income = sum(txs.filter(isIncome));
+  const transfers = sum(txs.filter((t) => t.kind === "debit" && t.category === "Transfer"));
+  const prev = sum(all.filter((t) => isSpend(t) && monthKey(t.date) === shiftMonth(month, -1)));
 
   const [y, m] = month.split("-").map(Number);
   const daysInMonth = new Date(y, m, 0).getDate();
@@ -172,6 +182,7 @@ export function insights(all: Tx[], month: string): Insights {
     cats,
     shops,
     roast: roast(debits),
+    transfers,
   };
 }
 
@@ -208,7 +219,7 @@ export type Sub = { merchant: string; amount: number; next: number; rising: bool
 export function subscriptions(all: Tx[]): Sub[] {
   const by = new Map<string, Tx[]>();
   for (const t of all) {
-    if (t.kind !== "debit") continue;
+    if (!isSpend(t)) continue;
     by.set(t.merchant, [...(by.get(t.merchant) ?? []), t]);
   }
   const out: Sub[] = [];
@@ -216,7 +227,8 @@ export function subscriptions(all: Tx[]): Sub[] {
     const xs = [...list].sort((a, b) => a.date - b.date);
     const gaps = xs.slice(1).map((t, i) => (t.date - xs[i].date) / DAY);
     const avgGap = gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : 30;
-    const monthly = gaps.length >= 1 && avgGap >= 25 && avgGap <= 35;
+    // 3+ payments about a month apart, so a one-off repeat doesn't count
+    const monthly = gaps.length >= 2 && avgGap >= 25 && avgGap <= 35;
     const isSub = xs.some((t) => t.category === "Subscriptions");
     if (!monthly && !isSub) continue;
     const last = xs[xs.length - 1];
@@ -242,7 +254,7 @@ const dayKey = (d: Date) =>
 
 // every full day before today with its spend, plus the days left this month
 export function forecastInput(all: Tx[]): ForecastInput | null {
-  const debits = all.filter((t) => t.kind === "debit");
+  const debits = all.filter(isSpend);
   if (!debits.length) return null;
 
   const totals = new Map<string, number>();

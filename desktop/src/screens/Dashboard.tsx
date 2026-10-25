@@ -5,31 +5,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ChevronLeft, ChevronRight, Lightbulb, Search, Settings, type LucideIcon } from "lucide-react";
 import {
   CATEGORIES, SOURCE_LABEL, catColor, dayLabel, forecastInput, insights, lkr, lkrExact, monthKey, monthLabel,
-  relTime, shiftMonth, subscriptions, type Tx, type View,
+  relTime, shiftMonth, subscriptions, tidy, type Tx, type View,
 } from "@/lib/salli";
 
 const card = "rounded-3xl border bg-card p-5 sm:p-6";
 
 export function Dashboard({ view, onSettings }: { view: View; onSettings: () => void }) {
+  const all = useMemo(() => tidy(view.txs), [view.txs]);
   const latest = useMemo(
-    () => (view.txs.length ? monthKey(Math.max(...view.txs.map((t) => t.date))) : monthKey(Date.now())),
-    [view.txs],
+    () => (all.length ? monthKey(Math.max(...all.map((t) => t.date))) : monthKey(Date.now())),
+    [all],
   );
   const earliest = useMemo(
-    () => (view.txs.length ? monthKey(Math.min(...view.txs.map((t) => t.date))) : latest),
-    [view.txs, latest],
+    () => (all.length ? monthKey(Math.min(...all.map((t) => t.date))) : latest),
+    [all, latest],
   );
   const [month, setMonth] = useState(latest);
   const [cat, setCat] = useState("All");
   const [query, setQuery] = useState("");
 
-  const ins = useMemo(() => insights(view.txs, month), [view.txs, month]);
-  const subs = useMemo(() => subscriptions(view.txs), [view.txs]);
+  const ins = useMemo(() => insights(all, month), [all, month]);
+  const subs = useMemo(() => subscriptions(all), [all]);
   const subTotal = subs.reduce((s, x) => s + x.amount, 0);
   const label = monthLabel(month);
   const shortMonth = label.split(" ")[0];
   const roast = useRoast(ins, label, view.busy);
-  const fc = useForecast(view.txs, ins, view.busy);
+  const fc = useForecast(all, ins, view.busy);
 
   const shown = ins.txs.filter(
     (t) =>
@@ -89,7 +90,10 @@ export function Dashboard({ view, onSettings }: { view: View; onSettings: () => 
         <section aria-label="This month" className="grid gap-4 lg:grid-cols-3">
           <div className="flex min-w-0 flex-col gap-5 rounded-3xl border border-hero-accent/20 bg-hero p-5 text-hero-foreground sm:p-7 lg:col-span-2 dark:border-border">
             <div className="flex flex-wrap items-baseline justify-between gap-3 text-sm opacity-75">
-              <span>Spent in {shortMonth}</span>
+              <span>
+                Spent in {shortMonth}
+                {ins.transfers > 0 && ` · ${lkr(ins.transfers)} in transfers not counted`}
+              </span>
               {ins.isCurrent && <span>{ins.daysLeft} days left</span>}
             </div>
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
@@ -150,8 +154,14 @@ export function Dashboard({ view, onSettings }: { view: View; onSettings: () => 
             <Stat label="Income" value={lkr(ins.income)} note={`${ins.txs.filter((t) => t.kind === "credit").length} credits`} tone="good" />
             <Stat
               label="Left this month"
-              value={lkr(ins.income - ins.spent)}
-              note={ins.isCurrent && ins.daysLeft > 0 ? `About ${lkr(Math.max(0, ins.income - ins.spent) / ins.daysLeft)} per day is safe` : " "}
+              value={ins.income - ins.spent < 0 ? `− ${lkr(ins.spent - ins.income)}` : lkr(ins.income - ins.spent)}
+              note={
+                ins.income - ins.spent < 0
+                  ? `Over by ${lkr(ins.spent - ins.income)}`
+                  : ins.isCurrent && ins.daysLeft > 0
+                    ? `About ${lkr((ins.income - ins.spent) / ins.daysLeft)} per day is safe`
+                    : " "
+              }
               tone={ins.income - ins.spent >= 0 ? "good" : "bad"}
             />
             <Stat label="Subscriptions" value={`${lkr(subTotal)} / mo`} note={subs.slice(0, 2).map((s) => s.merchant).join(", ") || "None found yet"} tone="warn" />
