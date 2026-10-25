@@ -30,6 +30,11 @@ export default function App() {
     return () => subs.forEach((p) => p.then((f) => f()));
   }, []);
 
+  // after unpair or delete, always come back to the dashboard
+  useEffect(() => {
+    if (view && (!view.paired || !view.onboarded)) setScreen("home");
+  }, [view?.paired, view?.onboarded]);
+
   // countdown bar for the pairing code
   useEffect(() => {
     const t = setInterval(() => {
