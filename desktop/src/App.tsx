@@ -23,7 +23,7 @@ type Tx = {
   kind: "debit" | "credit";
   merchant: string;
   category: string;
-  source: "memory" | "ai" | "you";
+  source: "rule" | "memory" | "ai" | "you";
   key: string | null;
 };
 type View = {
@@ -63,6 +63,7 @@ const EMOJI: Record<string, string> = {
   Other: "🦥",
 };
 const SOURCE: Record<string, string> = {
+  rule: "⚡ rule",
   memory: "⚡ memory",
   ai: "🧠 Gemma",
   you: "✋ you",
@@ -278,6 +279,7 @@ export default function App() {
             <CardDescription>How they were read</CardDescription>
           </CardHeader>
           <CardContent className="text-sm space-y-1">
+            <p>⚡ {bySource("rule")} instant by rules</p>
             <p>⚡ {bySource("memory")} instant from memory</p>
             <p>🧠 {bySource("ai")} by Gemma</p>
             <p>✋ {bySource("you")} fixed by you</p>
