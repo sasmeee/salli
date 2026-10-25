@@ -66,6 +66,7 @@ pub(crate) fn spawn_parser(s: Shared) {
                             category: r.category.clone().unwrap_or(info.category),
                             source: source.into(),
                             key: r.key.clone(),
+                            merged: Vec::new(),
                         }),
                         _ => need_ai.push((m, r)),
                     }
@@ -143,6 +144,7 @@ pub(crate) fn spawn_parser(s: Shared) {
                                     category,
                                     source: "ai".into(),
                                     key: r.key.clone(),
+                                    merged: Vec::new(),
                                 });
                             }
                             _ => st.skipped.push(m.id.clone()),

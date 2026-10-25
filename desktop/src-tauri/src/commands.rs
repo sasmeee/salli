@@ -1,3 +1,4 @@
+use crate::dedupe::merge_duplicates;
 use crate::net::{PORT, local_ip};
 use crate::parser::spawn_parser;
 use crate::state::{Backup, MerchantInfo, PairingInfo, Shared, Store, ViewState, now, save};
@@ -34,7 +35,7 @@ pub(crate) fn get_state(state: tauri::State<Shared>) -> ViewState {
     let st = state.store.lock().unwrap();
     let done = st.txs.len() + st.skipped.len();
     ViewState {
-        txs: st.txs.clone(),
+        txs: merge_duplicates(st.txs.clone()),
         total_sms: st.inbox.len(),
         pending: st.inbox.len().saturating_sub(done),
         busy: *state.busy.lock().unwrap(),

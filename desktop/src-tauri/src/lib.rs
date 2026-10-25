@@ -1,4 +1,5 @@
 mod commands;
+mod dedupe;
 mod forecast;
 mod gemma;
 mod net;

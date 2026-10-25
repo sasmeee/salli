@@ -84,7 +84,7 @@ pub(crate) fn title(s: &str) -> String {
         .join(" ")
 }
 
-fn is_bank(sender: &str) -> bool {
+pub(crate) fn is_bank(sender: &str) -> bool {
     let up = sender.to_uppercase();
     BANKS.iter().any(|b| up.contains(b))
 }

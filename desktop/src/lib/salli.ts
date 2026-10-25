@@ -11,6 +11,8 @@ export type Tx = {
   category: string;
   source: "rule" | "memory" | "ai" | "you";
   key: string | null;
+  // other sms about the same payment, folded into this row
+  merged?: string[];
 };
 
 export type View = {

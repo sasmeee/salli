@@ -29,6 +29,9 @@ pub(crate) struct Tx {
     // shop name used to look up memory
     #[serde(default)]
     pub(crate) key: Option<String>,
+    // other sms about the same payment, folded into this row
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) merged: Vec<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
