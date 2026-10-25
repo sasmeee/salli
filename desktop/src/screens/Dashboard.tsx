@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
   ChevronLeft,
@@ -57,6 +57,7 @@ export function Dashboard({
   const subTotal = subs.reduce((s, x) => s + x.amount, 0);
   const label = monthLabel(month);
   const shortMonth = label.split(" ")[0];
+  const roast = useRoast(ins, label, view.busy);
 
   const shown = ins.txs.filter(
     (t) =>
@@ -194,14 +195,25 @@ export function Dashboard({
                 </div>
               </div>
             )}
-            {ins.roast && (
+            {roast.text && (
               <div className="flex items-start gap-3 rounded-2xl bg-hero-foreground/5 px-4 py-3.5">
                 <Lightbulb
                   size={20}
                   className="mt-0.5 flex-none text-hero-accent"
                   aria-hidden="true"
                 />
-                <p className="text-[15px] leading-relaxed">{ins.roast}</p>
+                <div className="flex min-w-0 flex-col gap-1">
+                  <p
+                    className={`text-[15px] leading-relaxed ${roast.thinking ? "opacity-60" : ""}`}
+                  >
+                    {roast.text}
+                  </p>
+                  {roast.byGemma && (
+                    <p className="text-xs opacity-60">
+                      Roasted by Gemma, on this laptop
+                    </p>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -489,6 +501,79 @@ export function Dashboard({
       </div>
     </main>
   );
+}
+
+// gemma writes the roast, saved per month so it only reruns when spending changes
+function useRoast(
+  ins: ReturnType<typeof insights>,
+  label: string,
+  busy: boolean,
+) {
+  const key = `salli-roast:${label}:${Math.round(ins.spent)}`;
+  const [state, setState] = useState<{ key: string; text: string } | null>(
+    null,
+  );
+  const [thinking, setThinking] = useState(false);
+
+  useEffect(() => {
+    if (ins.spent === 0) return;
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        setState({ key, text: saved });
+        return;
+      }
+    } catch {
+      // storage blocked, just ask gemma
+    }
+    // wait until sms reading is done so gemma isn't busy
+    if (busy) return;
+
+    let alive = true;
+    setThinking(true);
+    const timer = setTimeout(() => {
+      invoke<string>("roast", {
+        input: {
+          month: label,
+          spent: ins.spent,
+          income: ins.income,
+          delta: ins.delta,
+          shops: ins.shops.map((s) => ({
+            name: s.name,
+            category: s.category,
+            count: s.count,
+            total: s.total,
+          })),
+          cats: ins.cats,
+        },
+      })
+        .then((text) => {
+          try {
+            localStorage.setItem(key, text);
+          } catch {
+            // fine, we just ask again next time
+          }
+          if (alive) setState({ key, text });
+        })
+        .catch(() => {})
+        .finally(() => alive && setThinking(false));
+    }, 600);
+
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [key, busy]);
+
+  if (state?.key === key)
+    return { text: state.text, byGemma: true, thinking: false };
+  if (thinking)
+    return {
+      text: "Gemma is looking at your spending…",
+      byGemma: false,
+      thinking: true,
+    };
+  return { text: ins.roast, byGemma: false, thinking: false };
 }
 
 function TxRow({ t }: { t: Tx }) {

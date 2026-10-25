@@ -2,6 +2,7 @@ mod commands;
 mod gemma;
 mod net;
 mod parser;
+mod roast;
 mod rules;
 mod server;
 mod state;
@@ -84,7 +85,8 @@ pub fn run() {
             commands::import_data,
             commands::unpair_all,
             commands::reset_memory,
-            commands::delete_all_data
+            commands::delete_all_data,
+            roast::roast
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
