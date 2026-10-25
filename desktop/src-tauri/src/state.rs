@@ -45,6 +45,25 @@ pub(crate) struct Store {
     pub(crate) skipped: Vec<String>,
     pub(crate) sessions: HashSet<String>,
     pub(crate) memory: HashMap<String, MerchantInfo>,
+    // true once the user got past the first run screen
+    pub(crate) onboarded: bool,
+    pub(crate) last_sync: Option<u64>,
+    pub(crate) last_export: Option<u64>,
+}
+
+// what goes into a backup file, paired phones are left out on purpose
+#[derive(Serialize, Deserialize)]
+pub(crate) struct Backup {
+    pub(crate) salli_export: u32,
+    pub(crate) exported_at: u64,
+    #[serde(default)]
+    pub(crate) inbox: Vec<Sms>,
+    #[serde(default)]
+    pub(crate) txs: Vec<Tx>,
+    #[serde(default)]
+    pub(crate) skipped: Vec<String>,
+    #[serde(default)]
+    pub(crate) memory: HashMap<String, MerchantInfo>,
 }
 
 #[derive(Clone, Serialize)]
@@ -91,6 +110,9 @@ pub(crate) struct ViewState {
     pub(crate) paired: bool,
     pub(crate) memory_size: usize,
     pub(crate) last_error: Option<String>,
+    pub(crate) onboarded: bool,
+    pub(crate) last_sync: Option<u64>,
+    pub(crate) last_export: Option<u64>,
 }
 
 pub(crate) fn now() -> u64 {
@@ -108,8 +130,13 @@ pub(crate) fn save(s: &Shared) {
 }
 
 pub(crate) fn load(path: &PathBuf) -> Store {
-    std::fs::read(path)
+    let mut st: Store = std::fs::read(path)
         .ok()
         .and_then(|b| serde_json::from_slice(&b).ok())
-        .unwrap_or_default()
+        .unwrap_or_default();
+    // people who already have data skip the first run screen
+    if !st.txs.is_empty() {
+        st.onboarded = true;
+    }
+    st
 }

@@ -43,6 +43,7 @@ For each line: FIRST copy the shop or payee text exactly as written in THAT line
 THEN decide merchant and category using only that same line. Never mix information between lines. \
 amount = money moved (never the balance). type = debit if money left the account, credit if money came in. \
 merchant = short clean brand name ('KEELLS SUPER COLOMBO 07' -> 'Keells', 'UBER EATS COLOMBO' -> 'Uber Eats', 'CEB ONLINE PAYMENT' -> 'CEB'). \
+A taxi ride or trip from Uber is merchant 'Uber', never 'Uber Eats'. Uber Eats is only for food orders. \
 If a line is an ad, promo, loyalty points message, OTP or not a completed transaction, set is_transaction false.\n\
 Category guide:\n\
 - Groceries: supermarkets (Keells, Cargills Food City, Arpico, Laugfs Super, Glomark, Spar).\n\

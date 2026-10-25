@@ -17,6 +17,7 @@ use tauri::{Emitter, Manager};
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&dir)?;
@@ -77,7 +78,13 @@ pub fn run() {
             commands::pairing_info,
             commands::get_state,
             commands::retry_parse,
-            commands::fix_tx
+            commands::fix_tx,
+            commands::finish_onboarding,
+            commands::export_data,
+            commands::import_data,
+            commands::unpair_all,
+            commands::reset_memory,
+            commands::delete_all_data
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

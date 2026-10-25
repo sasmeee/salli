@@ -1,5 +1,5 @@
 use crate::parser::spawn_parser;
-use crate::state::{PairBody, Shared, SyncBody, save};
+use crate::state::{PairBody, Shared, SyncBody, now, save};
 use axum::{
     Json, Router,
     extract::{DefaultBodyLimit, State},
@@ -52,6 +52,7 @@ async fn sync(
                 added += 1;
             }
         }
+        st.last_sync = Some(now());
         (added, st.inbox.len())
     };
     save(&s);
