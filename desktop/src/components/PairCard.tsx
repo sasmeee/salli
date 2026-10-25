@@ -3,14 +3,15 @@ import { Lock } from "lucide-react";
 import type { Pairing } from "@/lib/salli";
 
 export function PairCard({ pair, left, onClose }: { pair: Pairing | null; left: number; onClose?: () => void }) {
-  const qr = pair ? JSON.stringify({ app: "salli", ip: pair.ip, port: pair.port, code: pair.code }) : "";
+  // a link, so the normal phone camera can open salli and pair straight away
+  const qr = pair ? `salli://pair?ip=${pair.ip}&port=${pair.port}&code=${pair.code}` : "";
   const pretty = pair ? `${pair.code.slice(0, 3)} ${pair.code.slice(3)}` : "--- ---";
 
   return (
     <div className="flex w-full max-w-sm flex-col items-center gap-5 rounded-3xl border bg-card p-6 shadow-[0_20px_60px_-30px_rgba(43,33,24,0.35)] sm:p-8">
       <p className="text-[15px] font-semibold">Pair your phone</p>
       <div className="rounded-2xl border bg-white p-3.5">
-        {pair ? <QRCodeSVG value={qr} size={196} fgColor="#2B2118" /> : <div className="size-49" />}
+        {pair ? <QRCodeSVG value={qr} size={196} fgColor="#000000" marginSize={0} /> : <div className="size-[196px]" />}
       </div>
       <div className="text-center">
         <p className="font-mono text-4xl font-bold tracking-[0.12em] sm:text-[44px]">{pretty}</p>

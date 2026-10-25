@@ -4,7 +4,7 @@ import type { Pairing } from "@/lib/salli";
 
 const STEPS = [
   "Open the Salli app on your Android phone",
-  "Scan this code, or type the 6 digits",
+  "Tap Scan QR code in the app, or type the 6 digits",
   "Both devices must be on the same WiFi",
 ];
 
