@@ -1,9 +1,4 @@
-export type Pairing = {
-  ip: string;
-  port: number;
-  code: string;
-  expires_at: number;
-};
+export type Pairing = { ip: string; port: number; code: string; expires_at: number };
 
 export type Tx = {
   id: string;
@@ -32,17 +27,8 @@ export type View = {
 };
 
 export const CATEGORIES = [
-  "Food",
-  "Groceries",
-  "Transport",
-  "Bills",
-  "Shopping",
-  "Salary",
-  "Transfer",
-  "Entertainment",
-  "Health",
-  "Subscriptions",
-  "Other",
+  "Food", "Groceries", "Transport", "Bills", "Shopping", "Salary",
+  "Transfer", "Entertainment", "Health", "Subscriptions", "Other",
 ];
 
 const CAT: Record<string, string> = {
@@ -73,11 +59,7 @@ const DAY = 86400000;
 export const num = (n: number) => Math.round(n).toLocaleString("en-LK");
 export const lkr = (n: number) => "LKR " + num(n);
 export const lkrExact = (n: number) =>
-  "LKR " +
-  n.toLocaleString("en-LK", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  "LKR " + n.toLocaleString("en-LK", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function relTime(sec: number | null): string {
   if (!sec) return "never";
@@ -85,10 +67,7 @@ export function relTime(sec: number | null): string {
   if (d < 60) return "just now";
   if (d < 3600) return `${Math.floor(d / 60)} min ago`;
   if (d < 86400) return `${Math.floor(d / 3600)} h ago`;
-  return new Date(sec * 1000).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-  });
+  return new Date(sec * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
 export const monthKey = (ms: number) => {
@@ -98,10 +77,7 @@ export const monthKey = (ms: number) => {
 
 export const monthLabel = (key: string) => {
   const [y, m] = key.split("-").map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString("en-GB", {
-    month: "long",
-    year: "numeric",
-  });
+  return new Date(y, m - 1, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 };
 
 export const shiftMonth = (key: string, by: number) => {
@@ -109,19 +85,9 @@ export const shiftMonth = (key: string, by: number) => {
   return monthKey(new Date(y, m - 1 + by, 1).getTime());
 };
 
-export type DayBar = {
-  day: number;
-  total: number;
-  forecast: boolean;
-  unusual: boolean;
-};
+export type DayBar = { day: number; total: number; forecast: boolean; unusual: boolean };
 export type CatRow = { name: string; total: number; pct: number };
-export type ShopRow = {
-  name: string;
-  total: number;
-  count: number;
-  category: string;
-};
+export type ShopRow = { name: string; total: number; count: number; category: string };
 
 export type Insights = {
   txs: Tx[];
@@ -142,17 +108,11 @@ export type Insights = {
 const sum = (xs: Tx[]) => xs.reduce((s, t) => s + t.amount, 0);
 
 export function insights(all: Tx[], month: string): Insights {
-  const txs = all
-    .filter((t) => monthKey(t.date) === month)
-    .sort((a, b) => b.date - a.date);
+  const txs = all.filter((t) => monthKey(t.date) === month).sort((a, b) => b.date - a.date);
   const debits = txs.filter((t) => t.kind === "debit");
   const spent = sum(debits);
   const income = sum(txs.filter((t) => t.kind === "credit"));
-  const prev = sum(
-    all.filter(
-      (t) => t.kind === "debit" && monthKey(t.date) === shiftMonth(month, -1),
-    ),
-  );
+  const prev = sum(all.filter((t) => t.kind === "debit" && monthKey(t.date) === shiftMonth(month, -1)));
 
   const [y, m] = month.split("-").map(Number);
   const daysInMonth = new Date(y, m, 0).getDate();
@@ -182,31 +142,19 @@ export function insights(all: Tx[], month: string): Insights {
   });
 
   const catMap = new Map<string, number>();
-  for (const t of debits)
-    catMap.set(t.category, (catMap.get(t.category) ?? 0) + t.amount);
+  for (const t of debits) catMap.set(t.category, (catMap.get(t.category) ?? 0) + t.amount);
   const cats = [...catMap.entries()]
-    .map(([name, total]) => ({
-      name,
-      total,
-      pct: spent ? Math.round((total / spent) * 100) : 0,
-    }))
+    .map(([name, total]) => ({ name, total, pct: spent ? Math.round((total / spent) * 100) : 0 }))
     .sort((a, b) => b.total - a.total);
 
   const shopMap = new Map<string, ShopRow>();
   for (const t of debits) {
-    const s = shopMap.get(t.merchant) ?? {
-      name: t.merchant,
-      total: 0,
-      count: 0,
-      category: t.category,
-    };
+    const s = shopMap.get(t.merchant) ?? { name: t.merchant, total: 0, count: 0, category: t.category };
     s.total += t.amount;
     s.count += 1;
     shopMap.set(t.merchant, s);
   }
-  const shops = [...shopMap.values()]
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 5);
+  const shops = [...shopMap.values()].sort((a, b) => b.total - a.total).slice(0, 5);
 
   return {
     txs,
@@ -230,19 +178,12 @@ function roast(debits: Tx[]): string | null {
   const m = new Map<string, ShopRow>();
   for (const t of debits) {
     if (t.category === "Bills" || t.category === "Subscriptions") continue;
-    const s = m.get(t.merchant) ?? {
-      name: t.merchant,
-      total: 0,
-      count: 0,
-      category: t.category,
-    };
+    const s = m.get(t.merchant) ?? { name: t.merchant, total: 0, count: 0, category: t.category };
     s.total += t.amount;
     s.count += 1;
     m.set(t.merchant, s);
   }
-  const top = [...m.values()]
-    .filter((s) => s.count >= 2)
-    .sort((a, b) => b.count - a.count)[0];
+  const top = [...m.values()].filter((s) => s.count >= 2).sort((a, b) => b.count - a.count)[0];
   if (!top) return null;
   const k = `LKR ${Math.round(top.total / 1000)}k`;
   switch (top.category) {
@@ -259,12 +200,7 @@ function roast(debits: Tx[]): string | null {
   }
 }
 
-export type Sub = {
-  merchant: string;
-  amount: number;
-  next: number;
-  rising: boolean;
-};
+export type Sub = { merchant: string; amount: number; next: number; rising: boolean };
 
 // same shop charging about every month, or anything marked as a subscription
 export function subscriptions(all: Tx[]): Sub[] {
@@ -277,9 +213,7 @@ export function subscriptions(all: Tx[]): Sub[] {
   for (const [merchant, list] of by) {
     const xs = [...list].sort((a, b) => a.date - b.date);
     const gaps = xs.slice(1).map((t, i) => (t.date - xs[i].date) / DAY);
-    const avgGap = gaps.length
-      ? gaps.reduce((a, b) => a + b, 0) / gaps.length
-      : 30;
+    const avgGap = gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : 30;
     const monthly = gaps.length >= 1 && avgGap >= 25 && avgGap <= 35;
     const isSub = xs.some((t) => t.category === "Subscriptions");
     if (!monthly && !isSub) continue;
@@ -295,20 +229,60 @@ export function subscriptions(all: Tx[]): Sub[] {
   return out.sort((a, b) => b.amount - a.amount);
 }
 
+export type ForecastInput = {
+  history: { date: string; total: number }[];
+  future: string[];
+  salary_days: string[];
+};
+
+const dayKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+// every full day before today with its spend, plus the days left this month
+export function forecastInput(all: Tx[]): ForecastInput | null {
+  const debits = all.filter((t) => t.kind === "debit");
+  if (!debits.length) return null;
+
+  const totals = new Map<string, number>();
+  for (const t of debits) {
+    const k = dayKey(new Date(t.date));
+    totals.set(k, (totals.get(k) ?? 0) + t.amount);
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(Math.min(...debits.map((t) => t.date)));
+  d.setHours(0, 0, 0, 0);
+
+  const history: ForecastInput["history"] = [];
+  while (d < today) {
+    history.push({ date: dayKey(d), total: totals.get(dayKey(d)) ?? 0 });
+    d.setDate(d.getDate() + 1);
+  }
+
+  const future: string[] = [];
+  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  const f = new Date(today);
+  f.setDate(f.getDate() + 1);
+  while (f <= end) {
+    future.push(dayKey(f));
+    f.setDate(f.getDate() + 1);
+  }
+
+  const salary_days = all
+    .filter((t) => t.kind === "credit" && t.category === "Salary")
+    .map((t) => dayKey(new Date(t.date)));
+
+  return { history, future, salary_days };
+}
+
 export function dayLabel(ms: number): string {
   const d = new Date(ms);
   const t = new Date();
   const y = new Date(Date.now() - DAY);
   const same = (a: Date, b: Date) => a.toDateString() === b.toDateString();
-  const base = d.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-  });
+  const base = d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   if (same(d, t)) return `Today, ${base}`;
   if (same(d, y)) return `Yesterday, ${base}`;
-  return d.toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
+  return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 }
