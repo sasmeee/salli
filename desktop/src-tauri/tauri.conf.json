@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "desktop",
+  "productName": "Salli",
   "version": "0.1.0",
   "identifier": "com.salli.desktop",
   "build": {
@@ -12,9 +12,12 @@
   "app": {
     "windows": [
       {
-        "title": "desktop",
-        "width": 800,
-        "height": 600
+        "title": "Salli",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 720,
+        "minHeight": 560,
+        "center": true
       }
     ],
     "security": {

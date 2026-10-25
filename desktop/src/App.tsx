@@ -1,147 +1,18 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { QRCodeSVG } from "qrcode.react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { SpendCharts } from "@/components/SpendCharts";
+import type { Pairing, View } from "@/lib/salli";
+import { PairScreen } from "@/screens/PairScreen";
+import { WelcomeScreen } from "@/screens/WelcomeScreen";
+import { Dashboard } from "@/screens/Dashboard";
+import { SettingsScreen } from "@/screens/SettingsScreen";
 import "./App.css";
-
-type Pairing = { ip: string; port: number; code: string; expires_at: number };
-type Tx = {
-  id: string;
-  date: number;
-  sender: string;
-  body: string;
-  amount: number;
-  kind: "debit" | "credit";
-  merchant: string;
-  category: string;
-  source: "rule" | "memory" | "ai" | "you";
-  key: string | null;
-};
-type View = {
-  txs: Tx[];
-  total_sms: number;
-  pending: number;
-  busy: boolean;
-  paired: boolean;
-  memory_size: number;
-  last_error: string | null;
-};
-
-const CATEGORIES = [
-  "Food",
-  "Groceries",
-  "Transport",
-  "Bills",
-  "Shopping",
-  "Salary",
-  "Transfer",
-  "Entertainment",
-  "Health",
-  "Subscriptions",
-  "Other",
-];
-const EMOJI: Record<string, string> = {
-  Food: "🍛",
-  Groceries: "🛒",
-  Transport: "🛺",
-  Bills: "💡",
-  Shopping: "🛍️",
-  Salary: "💰",
-  Transfer: "🔁",
-  Entertainment: "🎬",
-  Health: "💊",
-  Subscriptions: "📺",
-  Other: "🦥",
-};
-const SOURCE: Record<string, string> = {
-  rule: "⚡ rule",
-  memory: "⚡ memory",
-  ai: "🧠 Gemma",
-  you: "✋ you",
-};
-
-const lkr = (n: number) =>
-  "LKR " +
-  n.toLocaleString("en-LK", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  });
-
-function PairCard({
-  pair,
-  left,
-  onClose,
-}: {
-  pair: Pairing | null;
-  left: number;
-  onClose?: () => void;
-}) {
-  const qr = pair
-    ? JSON.stringify({
-        app: "salli",
-        ip: pair.ip,
-        port: pair.port,
-        code: pair.code,
-      })
-    : "";
-  const pretty = pair
-    ? `${pair.code.slice(0, 3)} ${pair.code.slice(3)}`
-    : "--- ---";
-  return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>Pair your phone</CardTitle>
-        <CardDescription>
-          Scan the QR, or type the code in the Salli app.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center gap-4">
-        {pair && (
-          <div className="rounded-xl bg-white p-4">
-            <QRCodeSVG value={qr} size={200} />
-          </div>
-        )}
-        <div className="text-center">
-          <p className="font-mono text-4xl font-bold tracking-widest">
-            {pretty}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {pair?.ip}:{pair?.port}
-          </p>
-        </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${(left / 30) * 100}%` }}
-          />
-        </div>
-        <p className="text-xs text-muted-foreground">New code in {left}s</p>
-        <Badge variant="secondary">Same WiFi only · no cloud</Badge>
-        {onClose && (
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Close
-          </Button>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function App() {
   const [pair, setPair] = useState<Pairing | null>(null);
   const [view, setView] = useState<View | null>(null);
   const [left, setLeft] = useState(30);
-  const [showPair, setShowPair] = useState(false);
+  const [screen, setScreen] = useState<"home" | "settings">("home");
 
   const loadPair = () => invoke<Pairing>("pairing_info").then(setPair);
   const loadView = () => invoke<View>("get_state").then(setView);
@@ -153,14 +24,12 @@ export default function App() {
       listen("code-changed", loadPair),
       listen("sms-synced", loadView),
       listen("tx-updated", loadView),
-      listen("phone-paired", () => {
-        setShowPair(false);
-        loadView();
-      }),
+      listen("phone-paired", loadView),
     ];
     return () => subs.forEach((p) => p.then((f) => f()));
   }, []);
 
+  // countdown bar for the pairing code
   useEffect(() => {
     const t = setInterval(() => {
       if (pair)
@@ -170,180 +39,17 @@ export default function App() {
   }, [pair]);
 
   if (!view) return null;
-
-  if (!view.paired) {
+  if (!view.paired) return <PairScreen pair={pair} left={left} />;
+  if (!view.onboarded) return <WelcomeScreen view={view} />;
+  if (screen === "settings") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-8 text-foreground">
-        <div className="text-center">
-          <h1 className="text-5xl font-bold">🦥 Salli</h1>
-          <p className="mt-2 text-muted-foreground">
-            Your money, read by AI on your own laptop.
-          </p>
-        </div>
-        <PairCard pair={pair} left={left} />
-      </main>
+      <SettingsScreen
+        view={view}
+        pair={pair}
+        left={left}
+        onBack={() => setScreen("home")}
+      />
     );
   }
-
-  const txs = [...view.txs].sort((a, b) => b.date - a.date);
-  const spent = txs
-    .filter((t) => t.kind === "debit")
-    .reduce((s, t) => s + t.amount, 0);
-  const income = txs
-    .filter((t) => t.kind === "credit")
-    .reduce((s, t) => s + t.amount, 0);
-  const bySource = (s: string) => txs.filter((t) => t.source === s).length;
-
-  const fix = (t: Tx, category: string) =>
-    invoke("fix_tx", { id: t.id, merchant: t.merchant, category });
-
-  return (
-    <main className="min-h-screen bg-background p-8 text-foreground">
-      <header className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-4xl font-bold">🦥 Salli</h1>
-          <p className="text-muted-foreground">
-            Your money, read by AI on your own laptop.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge className="bg-income text-white">📱 Phone paired</Badge>
-          <Button variant="outline" size="sm" onClick={() => setShowPair(true)}>
-            Pair another
-          </Button>
-        </div>
-      </header>
-
-      {showPair && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6"
-          onClick={() => setShowPair(false)}
-        >
-          <div onClick={(e) => e.stopPropagation()}>
-            <PairCard
-              pair={pair}
-              left={left}
-              onClose={() => setShowPair(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      {view.busy && view.pending > 0 && (
-        <div className="mb-6 rounded-lg border bg-accent px-4 py-3 text-sm text-accent-foreground">
-          🧠 Gemma is reading {view.pending} SMS on your laptop…
-        </div>
-      )}
-      {view.last_error && (
-        <div className="mb-6 flex items-center justify-between rounded-lg border border-spend/40 bg-spend/10 px-4 py-3 text-sm">
-          <span>⚠️ {view.last_error}</span>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => invoke("retry_parse")}
-          >
-            Retry
-          </Button>
-        </div>
-      )}
-
-      <div className="mb-6 grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Spent</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-spend">{lkr(spent)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Income</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-income">{lkr(income)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Transactions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{txs.length}</p>
-            <p className="text-xs text-muted-foreground">
-              from {view.total_sms} SMS
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>How they were read</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            <p>⚡ {bySource("rule")} instant by rules</p>
-            <p>⚡ {bySource("memory")} instant from memory</p>
-            <p>🧠 {bySource("ai")} by Gemma</p>
-            <p>✋ {bySource("you")} fixed by you</p>
-            <p className="text-xs text-muted-foreground">
-              {view.memory_size} shops remembered
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <SpendCharts txs={txs} />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Transactions</CardTitle>
-          <CardDescription>
-            Wrong category? Change it once, Salli remembers forever.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="divide-y">
-          {txs.length === 0 && (
-            <p className="py-4 text-muted-foreground">
-              Nothing yet. Tap Send on your phone. 🦥
-            </p>
-          )}
-          {txs.map((t) => (
-            <div
-              key={t.id}
-              className="flex items-center justify-between gap-4 py-3"
-              title={t.body}
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="text-2xl">{EMOJI[t.category] ?? "🦥"}</span>
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{t.merchant}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t.sender} · {new Date(t.date).toLocaleDateString()} ·{" "}
-                    {SOURCE[t.source] ?? ""}
-                  </p>
-                </div>
-              </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <select
-                  className="rounded-md border bg-background px-2 py-1 text-sm"
-                  value={t.category}
-                  onChange={(e) => fix(t, e.target.value)}
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {EMOJI[c]} {c}
-                    </option>
-                  ))}
-                </select>
-                <p
-                  className={`w-36 text-right font-mono font-semibold ${t.kind === "credit" ? "text-income" : "text-spend"}`}
-                >
-                  {t.kind === "credit" ? "+" : "−"} {lkr(t.amount)}
-                </p>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    </main>
-  );
+  return <Dashboard view={view} onSettings={() => setScreen("settings")} />;
 }

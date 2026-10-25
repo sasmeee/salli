@@ -1,0 +1,80 @@
+import { QRCodeSVG } from "qrcode.react";
+import type { Pairing } from "@/lib/salli";
+
+export function PairCard({
+  pair,
+  left,
+  onClose,
+}: {
+  pair: Pairing | null;
+  left: number;
+  onClose?: () => void;
+}) {
+  const qr = pair
+    ? JSON.stringify({
+        app: "salli",
+        ip: pair.ip,
+        port: pair.port,
+        code: pair.code,
+      })
+    : "";
+  const pretty = pair
+    ? `${pair.code.slice(0, 3)} ${pair.code.slice(3)}`
+    : "--- ---";
+
+  return (
+    <div className="flex w-full max-w-sm flex-col items-center gap-5 rounded-3xl border bg-card p-8 shadow-[0_20px_60px_-30px_rgba(43,33,24,0.35)]">
+      <p className="text-[15px] font-semibold">Pair your phone</p>
+      <div className="rounded-2xl border bg-white p-3.5">
+        {pair ? (
+          <QRCodeSVG value={qr} size={196} fgColor="#2B2118" />
+        ) : (
+          <div className="size-49" />
+        )}
+      </div>
+      <div className="text-center">
+        <p className="font-mono text-[44px] font-bold tracking-[0.12em]">
+          {pretty}
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{pair?.ip}</p>
+      </div>
+      <div className="flex w-full flex-col gap-1.5">
+        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-foreground transition-all duration-300"
+            style={{ width: `${(left / 30) * 100}%` }}
+          />
+        </div>
+        <p className="text-center text-xs text-muted-foreground">
+          New code in {left}s
+        </p>
+      </div>
+      <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-2 text-xs font-semibold text-muted-foreground">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="5" y="11" width="14" height="10" rx="2" />
+          <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+        </svg>
+        Same WiFi only · no cloud
+      </div>
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-sm font-semibold text-muted-foreground hover:text-foreground"
+        >
+          Close
+        </button>
+      )}
+    </div>
+  );
+}
