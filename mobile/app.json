@@ -20,9 +20,26 @@
       "package": "com.salli.mobile",
       "permissions": [
         "READ_SMS",
-        "RECEIVE_SMS"
+        "RECEIVE_SMS",
+        "CAMERA"
       ]
     },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Scan the Salli pairing code on your laptop."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }
