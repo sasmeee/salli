@@ -84,11 +84,17 @@ Android phone                          Your laptop (same WiFi)
 
 ### Laptop
 
-You need [Ollama](https://ollama.com), [Rust](https://rustup.rs) and [Bun](https://bun.sh).
+Install [Ollama](https://ollama.com) and pull Gemma:
 
 ```bash
 ollama pull gemma3:4b
+```
 
+**Windows:** download `Salli_1.0.0_x64-setup.exe` from the [latest release](https://github.com/sasmeee/salli/releases) and run it. It isn't code-signed, so if SmartScreen warns you, click *More info → Run anyway*.
+
+**Build from source** (any OS), with [Rust](https://rustup.rs) and [Bun](https://bun.sh):
+
+```bash
 git clone https://github.com/sasmeee/salli.git
 cd salli/desktop
 bun install
