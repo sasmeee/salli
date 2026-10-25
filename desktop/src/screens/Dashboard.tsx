@@ -1,5 +1,13 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Lightbulb,
+  Search,
+  Settings,
+  type LucideIcon,
+} from "lucide-react";
 import {
   CATEGORIES,
   SOURCE_LABEL,
@@ -82,27 +90,25 @@ export function Dashboard({
             className="flex items-center gap-1 rounded-xl bg-muted p-1"
           >
             <IconButton
+              icon={ChevronLeft}
               label="Previous month"
               disabled={month <= earliest}
               onClick={() => setMonth(shiftMonth(month, -1))}
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </IconButton>
+            />
             <div className="flex h-9 min-w-36 items-center justify-center rounded-lg bg-card px-3.5 text-sm font-semibold">
               {label}
             </div>
             <IconButton
+              icon={ChevronRight}
               label="Next month"
               disabled={month >= monthKey(Date.now())}
               onClick={() => setMonth(shiftMonth(month, 1))}
-            >
-              <path d="M9 18l6-6-6-6" />
-            </IconButton>
+            />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="flex items-center gap-2 rounded-full bg-[#E3F1E8] px-3 py-2 text-[13px] font-semibold text-[#1E6B47]">
-              <span className="size-2 rounded-full bg-[#1F9D6B]" />
+            <span className="flex items-center gap-2 rounded-full bg-good-bg px-3 py-2 text-[13px] font-semibold text-good">
+              <span className="size-2 rounded-full bg-good-strong" />
               Synced · {relTime(view.last_sync)}
             </span>
             <span className="hidden items-center gap-2 rounded-full border bg-card px-3 py-2 text-[13px] font-medium text-muted-foreground md:flex">
@@ -116,20 +122,7 @@ export function Dashboard({
               onClick={onSettings}
               className="flex size-10 items-center justify-center rounded-xl border bg-card hover:bg-muted"
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="3" />
-                <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
-              </svg>
+              <Settings size={18} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -137,7 +130,7 @@ export function Dashboard({
 
       <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 pt-5 pb-16 sm:gap-6 sm:px-8 sm:pt-6">
         {view.last_error && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#F0C9BF] bg-[#FDF1EE] px-4 py-3 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-bad-border bg-bad-bg px-4 py-3 text-sm">
             <span className="min-w-0 flex-1">{view.last_error}</span>
             <button
               type="button"
@@ -150,7 +143,7 @@ export function Dashboard({
         )}
 
         <section aria-label="This month" className="grid gap-4 lg:grid-cols-3">
-          <div className="flex min-w-0 flex-col gap-5 rounded-3xl bg-foreground p-5 text-background sm:p-7 lg:col-span-2">
+          <div className="flex min-w-0 flex-col gap-5 rounded-3xl border border-hero-accent/20 bg-hero p-5 text-hero-foreground sm:p-7 lg:col-span-2 dark:border-border">
             <div className="flex flex-wrap items-baseline justify-between gap-3 text-sm opacity-75">
               <span>Spent in {shortMonth}</span>
               {ins.isCurrent && <span>{ins.daysLeft} days left</span>}
@@ -163,7 +156,7 @@ export function Dashboard({
                 {Math.round(ins.spent).toLocaleString("en-LK")}
               </p>
               {ins.delta !== null && (
-                <span className="text-sm font-semibold text-[#F2B38A]">
+                <span className="text-sm font-semibold text-hero-accent">
                   {ins.delta >= 0 ? "▲" : "▼"} {Math.abs(ins.delta)}% vs last
                   month
                 </span>
@@ -171,14 +164,14 @@ export function Dashboard({
             </div>
             {ins.incomeUsed !== null && (
               <div className="flex flex-col gap-2">
-                <div className="relative h-3 overflow-hidden rounded-full bg-white/15">
+                <div className="relative h-3 overflow-hidden rounded-full bg-hero-foreground/10">
                   <div
-                    className="absolute inset-y-0 left-0 rounded-full bg-[#F2B38A]"
+                    className="absolute inset-y-0 left-0 rounded-full bg-hero-accent"
                     style={{ width: `${Math.min(100, ins.incomeUsed * 100)}%` }}
                   />
                   {ins.isCurrent && ins.income > 0 && (
                     <div
-                      className="absolute inset-y-0 bg-[repeating-linear-gradient(45deg,#F2B38A66_0_6px,transparent_6px_12px)]"
+                      className="absolute inset-y-0 bg-[repeating-linear-gradient(45deg,var(--hero-accent)_0_6px,transparent_6px_12px)] opacity-40"
                       style={{
                         left: `${Math.min(100, ins.incomeUsed * 100)}%`,
                         width: `${Math.max(0, Math.min(100, (ins.forecast / ins.income) * 100) - ins.incomeUsed * 100)}%`,
@@ -202,22 +195,12 @@ export function Dashboard({
               </div>
             )}
             {ins.roast && (
-              <div className="flex items-start gap-3 rounded-2xl bg-white/10 px-4 py-3.5">
-                <svg
-                  className="mt-0.5 flex-none"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#F2B38A"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              <div className="flex items-start gap-3 rounded-2xl bg-hero-foreground/5 px-4 py-3.5">
+                <Lightbulb
+                  size={20}
+                  className="mt-0.5 flex-none text-hero-accent"
                   aria-hidden="true"
-                >
-                  <path d="M12 3a7 7 0 0 0-4 12.7V18h8v-2.3A7 7 0 0 0 12 3z" />
-                  <path d="M9 21h6" />
-                </svg>
+                />
                 <p className="text-[15px] leading-relaxed">{ins.roast}</p>
               </div>
             )}
@@ -228,7 +211,7 @@ export function Dashboard({
               label="Income"
               value={lkr(ins.income)}
               note={`${ins.txs.filter((t) => t.kind === "credit").length} credits`}
-              tone="green"
+              tone="good"
             />
             <Stat
               label="Left this month"
@@ -238,7 +221,7 @@ export function Dashboard({
                   ? `About ${lkr(Math.max(0, ins.income - ins.spent) / ins.daysLeft)} per day is safe`
                   : " "
               }
-              tone={ins.income - ins.spent >= 0 ? "green" : "red"}
+              tone={ins.income - ins.spent >= 0 ? "good" : "bad"}
             />
             <Stat
               label="Subscriptions"
@@ -249,7 +232,7 @@ export function Dashboard({
                   .map((s) => s.merchant)
                   .join(", ") || "None found yet"
               }
-              tone="amber"
+              tone="warn"
             />
           </div>
         </section>
@@ -272,11 +255,11 @@ export function Dashboard({
                 title={`${d.day} ${shortMonth}: ${lkr(d.total)}${d.forecast ? " (forecast)" : ""}`}
                 className={`min-w-0 flex-1 rounded-t ${
                   d.forecast
-                    ? "border-[1.5px] border-b-0 border-dashed border-[#1F9D6B] bg-[#1F9D6B]/10"
+                    ? "border-[1.5px] border-b-0 border-dashed border-good-strong bg-good-strong/10"
                     : d.unusual
-                      ? "bg-[#C2553F]"
+                      ? "bg-bad-strong"
                       : d.total > 0
-                        ? "bg-[#1F9D6B]"
+                        ? "bg-good-strong"
                         : "bg-border"
                 }`}
                 style={{
@@ -293,13 +276,13 @@ export function Dashboard({
             ))}
           </div>
           <div className="flex flex-wrap gap-4 text-[13px] text-muted-foreground">
-            <Legend className="bg-[#1F9D6B]">Spent</Legend>
+            <Legend className="bg-good-strong">Spent</Legend>
             {ins.isCurrent && (
-              <Legend className="border-[1.5px] border-dashed border-[#1F9D6B]">
+              <Legend className="border-[1.5px] border-dashed border-good-strong">
                 Forecast
               </Legend>
             )}
-            <Legend className="bg-[#C2553F]">Unusual day</Legend>
+            <Legend className="bg-bad-strong">Unusual day</Legend>
           </div>
         </section>
 
@@ -409,14 +392,14 @@ export function Dashboard({
                 key={s.merchant}
                 className={`flex items-center justify-between gap-3 rounded-xl px-3.5 py-3 ${
                   s.rising
-                    ? "border border-[#F2D3A6] bg-[#FFF4E5]"
+                    ? "border border-warn-border bg-warn-bg"
                     : "bg-muted/60"
                 }`}
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{s.merchant}</p>
                   <p
-                    className={`text-xs ${s.rising ? "text-[#8A5A12]" : "text-muted-foreground"}`}
+                    className={`text-xs ${s.rising ? "text-warn" : "text-muted-foreground"}`}
                   >
                     {s.rising
                       ? "Went up since last time"
@@ -444,19 +427,7 @@ export function Dashboard({
               </p>
             </div>
             <label className="flex h-10 w-full items-center gap-2 rounded-xl border bg-background px-3 text-muted-foreground sm:w-auto sm:min-w-60">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                aria-hidden="true"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-3.5-3.5" />
-              </svg>
+              <Search size={16} aria-hidden="true" />
               <span className="sr-only">Search transactions</span>
               <input
                 type="search"
@@ -521,7 +492,6 @@ export function Dashboard({
 }
 
 function TxRow({ t }: { t: Tx }) {
-  const c = catColor(t.category);
   return (
     <div
       className="flex flex-wrap items-center gap-x-3.5 gap-y-2 border-b border-border/60 py-3"
@@ -536,7 +506,10 @@ function TxRow({ t }: { t: Tx }) {
       </div>
       <div className="ml-auto flex items-center gap-3">
         <label className="relative flex h-8 items-center gap-2 rounded-full border bg-card px-3 text-[13px] font-medium hover:bg-muted">
-          <span className="size-2 rounded-full" style={{ background: c.fg }} />
+          <span
+            className="size-2 rounded-full"
+            style={{ background: catColor(t.category).fg }}
+          />
           <span className="sr-only">Category for {t.merchant}</span>
           <select
             value={t.category}
@@ -557,7 +530,7 @@ function TxRow({ t }: { t: Tx }) {
           </select>
         </label>
         <p
-          className={`min-w-28 text-right font-mono text-sm font-semibold whitespace-nowrap ${t.kind === "credit" ? "text-[#1E6B47]" : ""}`}
+          className={`min-w-28 text-right font-mono text-sm font-semibold whitespace-nowrap ${t.kind === "credit" ? "text-good" : ""}`}
         >
           {t.kind === "credit" ? "+ " : "− "}
           {lkrExact(t.amount)}
@@ -568,11 +541,10 @@ function TxRow({ t }: { t: Tx }) {
 }
 
 function Avatar({ name, category }: { name: string; category: string }) {
-  const c = catColor(category);
   return (
     <div
-      className="flex size-10 flex-none items-center justify-center rounded-xl text-[15px] font-bold"
-      style={{ background: c.bg, color: c.fg }}
+      className="cat flex size-10 flex-none items-center justify-center rounded-xl text-[15px] font-bold"
+      style={{ "--c": catColor(category).fg } as CSSProperties}
     >
       {name.slice(0, 1).toUpperCase()}
     </div>
@@ -588,20 +560,16 @@ function Stat({
   label: string;
   value: string;
   note: string;
-  tone: "green" | "red" | "amber";
+  tone: "good" | "bad" | "warn";
 }) {
-  const amber = tone === "amber";
+  const warn = tone === "warn";
   const color =
-    tone === "green"
-      ? "text-[#1E6B47]"
-      : tone === "red"
-        ? "text-[#A23E2B]"
-        : "text-[#8A5A12]";
+    tone === "good" ? "text-good" : tone === "bad" ? "text-bad" : "text-warn";
   return (
     <div
-      className={`flex min-w-0 flex-col gap-1.5 rounded-3xl border p-5 ${amber ? "border-[#F2D3A6] bg-[#FFF4E5]" : "bg-card"}`}
+      className={`flex min-w-0 flex-col gap-1.5 rounded-3xl border p-5 ${warn ? "border-warn-border bg-warn-bg" : "bg-card"}`}
     >
-      <p className={`text-[13px] ${amber ? color : "text-muted-foreground"}`}>
+      <p className={`text-[13px] ${warn ? color : "text-muted-foreground"}`}>
         {label}
       </p>
       <p className="truncate text-2xl leading-tight font-bold sm:text-[28px]">
@@ -613,15 +581,15 @@ function Stat({
 }
 
 function IconButton({
+  icon: Icon,
   label,
   disabled,
   onClick,
-  children,
 }: {
+  icon: LucideIcon;
   label: string;
   disabled?: boolean;
   onClick: () => void;
-  children: React.ReactNode;
 }) {
   return (
     <button
@@ -631,19 +599,7 @@ function IconButton({
       onClick={onClick}
       className="flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-card disabled:cursor-not-allowed disabled:opacity-40"
     >
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        {children}
-      </svg>
+      <Icon size={16} aria-hidden="true" />
     </button>
   );
 }

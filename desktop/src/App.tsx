@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { Pairing, View } from "@/lib/salli";
+import "@/lib/theme";
 import { PairScreen } from "@/screens/PairScreen";
 import { WelcomeScreen } from "@/screens/WelcomeScreen";
 import { Dashboard } from "@/screens/Dashboard";

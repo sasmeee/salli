@@ -2,15 +2,23 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { confirm, open, save } from "@tauri-apps/plugin-dialog";
+import { ChevronLeft, Monitor, Moon, Sun } from "lucide-react";
 import { PairCard } from "@/components/PairCard";
 import { relTime, type Pairing, type View } from "@/lib/salli";
+import { getTheme, setTheme, type Theme } from "@/lib/theme";
 
 type ExportResult = { txs: number; shops: number; sms: number };
 type ImportResult = { added_txs: number; added_sms: number; shops: number };
 
-const card = "flex flex-col gap-4 rounded-3xl border bg-card p-6";
+const card = "flex flex-col gap-4 rounded-3xl border bg-card p-5 sm:p-6";
 const btn =
   "h-10 rounded-xl border bg-card px-3.5 text-sm font-semibold hover:bg-muted";
+
+const THEMES = [
+  { value: "system", label: "System", icon: Monitor },
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+] as const;
 
 export function SettingsScreen({
   view,
@@ -27,6 +35,7 @@ export function SettingsScreen({
   const [dataMsg, setDataMsg] = useState<{ ok: boolean; text: string } | null>(
     null,
   );
+  const [theme, setThemeState] = useState<Theme>(getTheme());
 
   useEffect(() => {
     const un = listen("phone-paired", () => setShowPair(false));
@@ -48,6 +57,11 @@ export function SettingsScreen({
     : view.busy
       ? `Reading ${view.pending}…`
       : "Ready";
+
+  function pickTheme(t: Theme) {
+    setTheme(t);
+    setThemeState(t);
+  }
 
   async function exportData() {
     setDataMsg(null);
@@ -93,7 +107,7 @@ export function SettingsScreen({
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex max-w-3xl flex-col gap-5 px-8 pt-7 pb-16">
+      <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 pt-7 pb-16 sm:px-8">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -101,19 +115,7 @@ export function SettingsScreen({
             onClick={onBack}
             className="flex size-10 items-center justify-center rounded-xl border bg-card hover:bg-muted"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
+            <ChevronLeft size={18} aria-hidden="true" />
           </button>
           <h1 className="text-2xl font-bold">Settings</h1>
         </div>
@@ -134,9 +136,9 @@ export function SettingsScreen({
               Pair a phone
             </button>
           </div>
-          <div className="flex items-center justify-between gap-3 rounded-xl bg-muted/60 px-4 py-3.5">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-muted/60 px-4 py-3.5">
             <div className="flex items-center gap-3">
-              <span className="size-2 rounded-full bg-[#1F9D6B]" />
+              <span className="size-2 rounded-full bg-good-strong" />
               <div>
                 <p className="text-[15px] font-semibold">Phone paired</p>
                 <p className="text-xs text-muted-foreground">
@@ -152,7 +154,7 @@ export function SettingsScreen({
                   "Unpair all phones? They'll need to scan the code again.",
                 )
               }
-              className="h-9 rounded-lg border bg-card px-3 text-[13px] font-semibold text-[#A23E2B] hover:bg-muted"
+              className="h-9 rounded-lg border bg-card px-3 text-[13px] font-semibold text-bad hover:bg-muted"
             >
               Unpair
             </button>
@@ -201,11 +203,45 @@ export function SettingsScreen({
           </div>
           {dataMsg && (
             <p
-              className={`text-sm font-semibold ${dataMsg.ok ? "text-[#1E6B47]" : "text-[#A23E2B]"}`}
+              className={`text-sm font-semibold ${dataMsg.ok ? "text-good" : "text-bad"}`}
             >
               {dataMsg.text}
             </p>
           )}
+        </section>
+
+        <section aria-label="Appearance" className={card}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">Appearance</h2>
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
+                System follows your Windows setting
+              </p>
+            </div>
+            <div
+              role="radiogroup"
+              aria-label="Theme"
+              className="flex gap-1 rounded-xl bg-muted p-1"
+            >
+              {THEMES.map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={theme === value}
+                  onClick={() => pickTheme(value)}
+                  className={`flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold ${
+                    theme === value
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon size={16} aria-hidden="true" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </section>
 
         <section aria-label="AI model" className={card}>
@@ -216,7 +252,7 @@ export function SettingsScreen({
               Ollama.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Tile label="Model" value="gemma3:4b" />
             <Tile
               label="Status"
@@ -227,13 +263,13 @@ export function SettingsScreen({
             <Tile label="Read instantly" value={`${instantPct}%`} />
           </div>
           {view.last_error && (
-            <p className="text-sm text-[#A23E2B]">{view.last_error}</p>
+            <p className="text-sm text-bad">{view.last_error}</p>
           )}
         </section>
 
         <section
           aria-label="Start over"
-          className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-[#F0C9BF] bg-card p-6"
+          className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-bad-border bg-card p-5 sm:p-6"
         >
           <div>
             <h2 className="text-lg font-semibold">Start over</h2>
@@ -262,7 +298,7 @@ export function SettingsScreen({
                   "Delete all Salli data on this laptop? Export a backup first if you want to keep it.",
                 )
               }
-              className="h-10 rounded-xl border border-[#F0C9BF] bg-[#FDF1EE] px-3.5 text-sm font-semibold text-[#A23E2B] hover:opacity-90"
+              className="h-10 rounded-xl border border-bad-border bg-bad-bg px-3.5 text-sm font-semibold text-bad hover:opacity-90"
             >
               Delete all data
             </button>
@@ -272,7 +308,7 @@ export function SettingsScreen({
 
       {showPair && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6"
           onClick={() => setShowPair(false)}
         >
           <div onClick={(e) => e.stopPropagation()}>
@@ -298,9 +334,9 @@ function Tile({
   green?: boolean;
 }) {
   return (
-    <div className="rounded-xl bg-muted/60 px-4 py-3.5">
+    <div className="min-w-0 rounded-xl bg-muted/60 px-4 py-3.5">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`mt-1 font-semibold ${green ? "text-[#1E6B47]" : ""}`}>
+      <p className={`mt-1 truncate font-semibold ${green ? "text-good" : ""}`}>
         {value}
       </p>
     </div>

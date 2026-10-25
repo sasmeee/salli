@@ -45,21 +45,21 @@ export const CATEGORIES = [
   "Other",
 ];
 
-const CAT: Record<string, { bg: string; fg: string }> = {
-  Groceries: { bg: "#E4EEDD", fg: "#4E7A3C" },
-  Food: { bg: "#FBEBD3", fg: "#B7741A" },
-  Transport: { bg: "#DDE9EE", fg: "#3E6D80" },
-  Bills: { bg: "#EDE6DC", fg: "#7A6650" },
-  Subscriptions: { bg: "#ECE3F2", fg: "#7D52A0" },
-  Shopping: { bg: "#F6E0DA", fg: "#B24A35" },
-  Health: { bg: "#DCF0E6", fg: "#1F8A5C" },
-  Entertainment: { bg: "#F7E1E8", fg: "#B0466A" },
-  Salary: { bg: "#E3F1E8", fg: "#1E6B47" },
-  Transfer: { bg: "#E0EDF2", fg: "#3E7590" },
-  Other: { bg: "#EFEAE3", fg: "#7D7064" },
+const CAT: Record<string, string> = {
+  Groceries: "#4E7A3C",
+  Food: "#B7741A",
+  Transport: "#3E6D80",
+  Bills: "#7A6650",
+  Subscriptions: "#7D52A0",
+  Shopping: "#B24A35",
+  Health: "#1F8A5C",
+  Entertainment: "#B0466A",
+  Salary: "#1E6B47",
+  Transfer: "#3E7590",
+  Other: "#7D7064",
 };
 
-export const catColor = (c: string) => CAT[c] ?? CAT.Other;
+export const catColor = (c: string) => ({ fg: CAT[c] ?? CAT.Other });
 
 export const SOURCE_LABEL: Record<string, string> = {
   rule: "rule",

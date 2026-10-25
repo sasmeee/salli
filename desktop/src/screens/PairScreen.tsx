@@ -15,16 +15,16 @@ export function PairScreen({
   left: number;
 }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-8 py-12 text-foreground">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12 text-foreground sm:px-8">
       <div className="flex w-full max-w-5xl flex-wrap items-center gap-12">
-        <div className="flex min-w-0 flex-[1_1_420px] flex-col gap-7">
+        <div className="flex min-w-0 flex-[1_1_380px] flex-col gap-7">
           <div className="flex items-center gap-3">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-foreground text-2xl font-bold text-background">
               S
             </div>
             <span className="text-2xl font-bold">Salli</span>
           </div>
-          <h1 className="text-[44px] leading-[1.1] font-bold tracking-tight">
+          <h1 className="text-[32px] leading-[1.1] font-bold tracking-tight sm:text-[44px]">
             Your bank SMS become a budget. You do nothing.
           </h1>
           <p className="text-[17px] leading-relaxed text-muted-foreground">
