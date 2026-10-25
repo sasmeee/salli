@@ -1,13 +1,11 @@
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import type { Theme } from "./theme";
 
 export function Logo({ t }: { t: Theme }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-      <View style={[s.logo, { backgroundColor: t.ink }]}>
-        <Text style={{ color: t.bg, fontWeight: "800", fontSize: 18 }}>S</Text>
-      </View>
+      <Image source={require("../assets/salli-logo.png")} style={s.logo} accessibilityIgnoresInvertColors />
       <Text style={{ color: t.ink, fontSize: 20, fontWeight: "700" }}>Salli</Text>
     </View>
   );
@@ -50,7 +48,7 @@ export function Card({ t, children, style }: { t: Theme; children: ReactNode; st
 }
 
 const s = StyleSheet.create({
-  logo: { width: 36, height: 36, borderRadius: 11, alignItems: "center", justifyContent: "center" },
+  logo: { width: 36, height: 36, borderRadius: 11 },
   btn: {
     height: 54,
     borderRadius: 16,
