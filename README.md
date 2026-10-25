@@ -7,6 +7,17 @@
 <p align="center"><b>Your bank SMS become a budget. You do nothing.</b></p>
 
 <p align="center">
+  <a href="https://github.com/sasmeee/salli/releases/latest"><img src="https://img.shields.io/github/v/release/sasmeee/salli?color=1E8A5C" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2B211A" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/Windows-desktop-3E6D80" alt="Windows">
+  <img src="https://img.shields.io/badge/Android-phone-4E7A3C" alt="Android">
+  <img src="https://img.shields.io/badge/Gemma_3-via_Ollama-B7741A" alt="Gemma 3 via Ollama">
+  <img src="https://img.shields.io/badge/TabPFN-forecast-7D52A0" alt="TabPFN">
+  <img src="https://img.shields.io/badge/Tauri-2-B24A35" alt="Tauri 2">
+  <a href="https://dev.to/sasmeee/salli-my-bank-sms-became-a-budget-while-i-did-nothing-491h"><img src="https://img.shields.io/badge/DEV-Hacktoberfest_AI_Challenge-0A0A0A?logo=devdotto" alt="DEV challenge"></a>
+</p>
+
+<p align="center">
   Salli reads the money SMS on your Android phone and turns them into a spending dashboard on your laptop,
   using Gemma running locally. No account, no cloud, nothing leaves your WiFi.
 </p>
