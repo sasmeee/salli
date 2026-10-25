@@ -11,9 +11,15 @@
   using Gemma running locally. No account, no cloud, nothing leaves your WiFi.
 </p>
 
+<p align="center">
+  <a href="https://youtu.be/HijsZHjPO18">Demo video</a> ·
+  <a href="https://dev.to/sasmeee/salli-my-bank-sms-became-a-budget-while-i-did-nothing-491h">DEV post</a> ·
+  <a href="https://github.com/sasmeee/salli/releases/latest">Download</a>
+</p>
+
 ---
 
-*Salli* (සල්ලි) means *money* in Sinhala. The mascot is a sloth because the whole point is that you stay lazy.
+_Salli_ (සල්ලි) means _money_ in Sinhala. The mascot is a sloth because the whole point is that you stay lazy.
 
 In Sri Lanka every card swipe, bill payment and salary credit already sends you an SMS. Budgeting apps want you to type all of that in again or hand your bank login to a cloud service. Salli just reads the SMS you already have.
 
@@ -90,7 +96,7 @@ Install [Ollama](https://ollama.com) and pull Gemma:
 ollama pull gemma3:4b
 ```
 
-**Windows:** download `Salli_1.0.0_x64-setup.exe` from the [latest release](https://github.com/sasmeee/salli/releases) and run it. It isn't code-signed, so if SmartScreen warns you, click *More info → Run anyway*.
+**Windows:** download `Salli_1.0.0_x64-setup.exe` from the [latest release](https://github.com/sasmeee/salli/releases) and run it. It isn't code-signed, so if SmartScreen warns you, click _More info → Run anyway_.
 
 **Build from source** (any OS), with [Rust](https://rustup.rs) and [Bun](https://bun.sh):
 
@@ -109,10 +115,10 @@ Download `salli.apk` from the [latest release](https://github.com/sasmeee/salli/
 
 Android protects SMS access, so apps that read SMS and don't come from the Play Store get blocked by Play Protect. To install:
 
-- Turn off *Play Store → profile → Play Protect → Scan apps* for a moment, install, then turn it back on, **or**
+- Turn off _Play Store → profile → Play Protect → Scan apps_ for a moment, install, then turn it back on, **or**
 - Install over USB with `adb install salli.apk`.
 
-On Android 13+, if SMS permission says *restricted setting*, open *Settings → Apps → Salli → ⋮ → Allow restricted settings*.
+On Android 13+, if SMS permission says _restricted setting_, open _Settings → Apps → Salli → ⋮ → Allow restricted settings_.
 
 To build it yourself:
 
@@ -139,12 +145,12 @@ The setup step logs you in to Prior Labs once to accept the model license and do
 
 `tools/bench.ts` generates realistic Sri Lankan bank SMS with known answers and scores what Salli extracts.
 
-| | Result |
-|---|---|
-| Amount, debit/credit, shop, category | 100% on the test set |
-| Promos and OTPs skipped | 100% |
-| Speed with Gemma 3 4B on a laptop CPU | about 0.6 to 0.7 s per new SMS |
-| Read without calling Gemma (rules + memory) | most SMS once shops are known |
+|                                             | Result                         |
+| ------------------------------------------- | ------------------------------ |
+| Amount, debit/credit, shop, category        | 100% on the test set           |
+| Promos and OTPs skipped                     | 100%                           |
+| Speed with Gemma 3 4B on a laptop CPU       | about 0.6 to 0.7 s per new SMS |
+| Read without calling Gemma (rules + memory) | most SMS once shops are known  |
 
 Honest note: some shops in the test set also appear as examples in the Gemma prompt, so real-world accuracy is lower. On my own real inbox, the misses were mostly receipts from billers being read as income, which the duplicate merge now handles.
 
