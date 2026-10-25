@@ -164,7 +164,7 @@ export function Dashboard({ view, onSettings }: { view: View; onSettings: () => 
               }
               tone={ins.income - ins.spent >= 0 ? "good" : "bad"}
             />
-            <Stat label="Subscriptions" value={`${lkr(subTotal)} / mo`} note={subs.slice(0, 2).map((s) => s.merchant).join(", ") || "None found yet"} tone="warn" />
+            <Stat label="Recurring" value={`${lkr(subTotal)} / mo`} note={subs.slice(0, 2).map((s) => s.merchant).join(", ") || "None found yet"} tone="warn" />
           </div>
         </section>
 

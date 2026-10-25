@@ -233,10 +233,14 @@ export function subscriptions(all: Tx[]): Sub[] {
     if (!monthly && !isSub) continue;
     const last = xs[xs.length - 1];
     const before = xs[xs.length - 2];
+    // roll forward past today so it always shows the next one
+    const step = (monthly ? avgGap : 30) * DAY;
+    let next = last.date + step;
+    while (next < Date.now()) next += step;
     out.push({
       merchant,
       amount: last.amount,
-      next: last.date + (monthly ? avgGap : 30) * DAY,
+      next,
       rising: !!before && last.amount > before.amount * 1.15,
     });
   }
