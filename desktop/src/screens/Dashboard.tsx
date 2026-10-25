@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Logo } from "@/components/Logo";
 import { ChevronLeft, ChevronRight, Lightbulb, Search, Settings, type LucideIcon } from "lucide-react";
 import {
   CATEGORIES, SOURCE_LABEL, catColor, dayLabel, forecastInput, insights, lkr, lkrExact, monthKey, monthLabel,
@@ -41,7 +42,7 @@ export function Dashboard({ view, onSettings }: { view: View; onSettings: () => 
       <header className="sticky top-0 z-10 border-b bg-background/85 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:gap-4 sm:px-8">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-foreground text-xl font-bold text-background">S</div>
+            <Logo size={40} />
             <div>
               <p className="text-xl leading-tight font-bold">Salli</p>
               <p className="hidden text-[13px] text-muted-foreground sm:block">Your money, read on your own laptop</p>
