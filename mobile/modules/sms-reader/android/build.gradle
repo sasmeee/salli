@@ -13,3 +13,8 @@ android {
     versionName "0.1.0"
   }
 }
+
+dependencies {
+  // open source qr scanner, works without google play
+  implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+}

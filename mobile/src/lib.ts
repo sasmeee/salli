@@ -56,6 +56,29 @@ export async function post(url: string, body: unknown, token?: string) {
   }
 }
 
+export type PairLink = { ip: string; port: number; code: string };
+
+// reads the qr code: a salli:// link, or the older json format
+export function parsePairLink(data: string): PairLink | null {
+  const m = data.trim().match(/^salli:\/\/pair\?(.+)$/i);
+  if (m) {
+    const q: Record<string, string> = {};
+    for (const part of m[1].split("&")) {
+      const [k, v = ""] = part.split("=");
+      q[k] = decodeURIComponent(v);
+    }
+    if (q.ip && q.code) return { ip: q.ip, port: Number(q.port) || 7777, code: q.code };
+    return null;
+  }
+  try {
+    const j = JSON.parse(data);
+    if (j.app === "salli" && j.ip && j.code) return { ip: j.ip, port: Number(j.port) || 7777, code: String(j.code) };
+  } catch {
+    // not json either
+  }
+  return null;
+}
+
 export function ago(ms: number | null): string {
   if (!ms) return "Not sent yet";
   const s = (Date.now() - ms) / 1000;

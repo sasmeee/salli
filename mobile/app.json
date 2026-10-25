@@ -2,6 +2,7 @@
   "expo": {
     "name": "Salli",
     "slug": "salli",
+    "scheme": "salli",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,12 +26,6 @@
       ]
     },
     "plugins": [
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Scan the Salli pairing code on your laptop."
-        }
-      ],
       [
         "expo-build-properties",
         {

@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,22 +11,19 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { CameraView, useCameraPermissions } from "expo-camera";
-import { post, type Link } from "./lib";
+import { scanQr } from "../modules/sms-reader";
+import { parsePairLink, post, type Link, type PairLink } from "./lib";
 import { TOP, useTheme } from "./theme";
 import { Button, Logo } from "./ui";
 
-export function PairScreen({ onPaired }: { onPaired: (l: Link) => void }) {
+export function PairScreen({ onPaired, incoming }: { onPaired: (l: Link) => void; incoming: PairLink | null }) {
   const t = useTheme();
-  const [scanning, setScanning] = useState(false);
   const [ip, setIp] = useState(__DEV__ ? "10.0.2.2" : "192.168.");
   const [code, setCode] = useState("");
   const [focused, setFocused] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
-  const [perm, requestPerm] = useCameraPermissions();
   const codeRef = useRef<TextInput>(null);
-  const scanned = useRef(false);
 
   async function pair(ipAddr: string, port: number, c: string) {
     setBusy(true);
@@ -34,52 +32,33 @@ export function PairScreen({ onPaired }: { onPaired: (l: Link) => void }) {
       const { token } = await post(`http://${ipAddr}:${port}/pair`, { code: c.replace(/\s/g, "") });
       onPaired({ ip: ipAddr, port, token });
     } catch (e: any) {
-      setMsg(e.message === "UNAUTHORIZED" ? "Wrong or old code. Try the new one on your laptop." : e.message);
+      setMsg(e.message === "UNAUTHORIZED" ? "That code just changed. Try the new one on your laptop." : e.message);
     } finally {
       setBusy(false);
     }
   }
 
-  async function startScan() {
-    if (!perm?.granted) {
-      const r = await requestPerm();
-      if (!r.granted) return setMsg("Salli needs the camera to scan the code.");
-    }
+  async function scan() {
     setMsg("");
-    scanned.current = false;
-    setScanning(true);
+    try {
+      const data = await scanQr();
+      if (!data) return;
+      const q = parsePairLink(data);
+      if (q) pair(q.ip, q.port, q.code);
+      else setMsg("That's not a Salli code. Scan the one on your laptop.");
+    } catch (e: any) {
+      setMsg("Scanner isn't available on this phone. Type the code below instead.");
+    }
   }
 
-  if (scanning) {
-    return (
-      <View style={{ flex: 1, backgroundColor: "#000" }}>
-        <StatusBar barStyle="light-content" />
-        <CameraView
-          style={StyleSheet.absoluteFill}
-          barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-          onBarcodeScanned={({ data }) => {
-            // camera fires many times, only take the first one
-            if (scanned.current) return;
-            scanned.current = true;
-            try {
-              const q = JSON.parse(data);
-              if (q.app !== "salli") throw new Error();
-              setScanning(false);
-              pair(q.ip, q.port, q.code);
-            } catch {
-              setScanning(false);
-              setMsg("That's not a Salli code. Scan the one on your laptop.");
-            }
-          }}
-        />
-        <View style={s.scanWrap} pointerEvents="box-none">
-          <Text style={s.scanTitle}>Point at the QR code on your laptop</Text>
-          <View style={s.frame} />
-          <Button t={t} kind="light" label="Cancel" onPress={() => setScanning(false)} style={{ alignSelf: "stretch" }} />
-        </View>
-      </View>
-    );
-  }
+  // opened from a salli:// link, pair right away
+  useEffect(() => {
+    if (incoming) {
+      setIp(incoming.ip);
+      setCode(incoming.code);
+      pair(incoming.ip, incoming.port, incoming.code);
+    }
+  }, [incoming]);
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: t.bg }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -92,7 +71,15 @@ export function PairScreen({ onPaired }: { onPaired: (l: Link) => void }) {
           <Text style={[s.lead, { color: t.muted }]}>Open Salli on your laptop. It shows a QR code and a 6-digit code.</Text>
         </View>
 
-        <Button t={t} label={busy ? "Connecting…" : "Scan QR code"} onPress={startScan} disabled={busy} />
+        <View style={{ gap: 10 }}>
+          <Button t={t} label={busy ? "Connecting…" : "Scan QR code"} onPress={scan} disabled={busy} />
+          {busy && (
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              <ActivityIndicator color={t.ink} />
+              <Text style={{ color: t.muted, fontSize: 14 }}>Connecting to your laptop…</Text>
+            </View>
+          )}
+        </View>
 
         <View style={s.divider}>
           <View style={[s.rule, { backgroundColor: t.border }]} />
@@ -176,9 +163,10 @@ export function PairScreen({ onPaired }: { onPaired: (l: Link) => void }) {
 }
 
 const s = StyleSheet.create({
-  page: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 32, gap: 26 },
+  page: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 32, gap: 24 },
   h1: { fontSize: 30, lineHeight: 35, fontWeight: "800", letterSpacing: -0.5 },
   lead: { fontSize: 15, lineHeight: 22 },
+  num: { width: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center" },
   divider: { flexDirection: "row", alignItems: "center", gap: 12 },
   rule: { flex: 1, height: 1 },
   label: { fontSize: 13, fontWeight: "600" },
@@ -199,7 +187,4 @@ const s = StyleSheet.create({
     borderRadius: 999,
   },
   dot: { width: 7, height: 7, borderRadius: 4 },
-  scanWrap: { flex: 1, alignItems: "center", justifyContent: "space-between", paddingHorizontal: 24, paddingTop: TOP + 24, paddingBottom: 40 },
-  scanTitle: { color: "#FFFFFF", fontSize: 17, fontWeight: "700", textAlign: "center" },
-  frame: { width: 250, height: 250, borderRadius: 28, borderWidth: 3, borderColor: "#FFFFFF" },
 });
